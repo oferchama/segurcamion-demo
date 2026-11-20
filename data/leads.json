@@ -1,0 +1,173 @@
+[
+  {
+    "_note": "Abandonó tras el paso 1: no dejó teléfono, así que la oferta Allianz se envía por email.",
+    "id": "L1001",
+    "receivedAt": "2026-11-20T08:05:00Z",
+    "form": {
+      "tipo_vehiculo": "6",
+      "ambito": "11",
+      "uso_vehiculo": "16",
+      "tipo_mercancia": "14",
+      "valor_nuevo": "78.000,00",
+      "cp": "39610",
+      "provincia": "Cantabria",
+      "fecha_comienzo": "01/12/2026",
+      "email": "demo1001@example.com",
+      "acepta-recibir-emails": "on",
+      "presupuesto": "CA2611201001"
+    }
+  },
+  {
+    "_note": "Completó los 3 pasos de la web. Siguiente paso: enviar la oferta Allianz y pedir los 5 datos que faltan.",
+    "id": "L1004",
+    "receivedAt": "2026-11-20T09:41:00Z",
+    "form": {
+      "tipo_vehiculo": "7",
+      "ambito": "110",
+      "uso_vehiculo": "16",
+      "tipo_mercancia": "13",
+      "valor_nuevo": "105.000,00",
+      "cp": "48950",
+      "provincia": "Bizkaia",
+      "fecha_comienzo": "15/12/2026",
+      "email": "demo1004@example.com",
+      "acepta-recibir-emails": "on",
+      "presupuesto": "CA2611201004"
+    },
+    "step3": {
+      "presupuesto": "CA2611201004",
+      "t": "8",
+      "fecha_comienzo": "15/12/2026",
+      "email": "demo1004@example.com",
+      "marca_modelo_vehiculo": "MAN TGM 18.290",
+      "matricula": "4821 KZD",
+      "mecanismos": "1",
+      "tipo_documento": "2",
+      "numero_documento": "B00000000",
+      "nombre_tomador": "Excavaciones Cantábrico SL (DEMO)",
+      "apellidos_tomador": "",
+      "telefono": "600 000 004",
+      "compania_actual": "Reale",
+      "numero_poliza": ""
+    }
+  },
+  {
+    "_note": "Lead completo (pasos 1-3 de la web + respuesta por WhatsApp): cotizan todas las aseguradoras.",
+    "id": "L1002",
+    "quoteRef": "CA2611191002",
+    "receivedAt": "2026-11-19T09:12:00Z",
+    "source": "web-form",
+    "formStep": 3,
+    "status": "datos_completos",
+    "demo": true,
+    "contact": {
+      "name": "Javier (DEMO)",
+      "surname": "Ruiz Gómez",
+      "phone": "600 000 002",
+      "email": "demo1002@example.com",
+      "taxIdType": "NIF",
+      "taxId": "00000000T",
+      "holderType": "autonomo",
+      "postalCode": "39610",
+      "province": "Cantabria"
+    },
+    "vehicle": {
+      "kind": "rigido",
+      "plate": "1234 KLM",
+      "make": "Iveco",
+      "model": "Eurocargo 120E25",
+      "makeModel": "Iveco Eurocargo 120E25",
+      "year": 2019,
+      "mmaKg": 12000,
+      "valueNew": 85000,
+      "attachedEquipment": "no"
+    },
+    "use": {
+      "service": "publico",
+      "scope": "nacional",
+      "cargo": "general"
+    },
+    "driver": {
+      "age": 44,
+      "licenseYears": 18
+    },
+    "history": {
+      "currentInsurer": "Mapfre",
+      "yearsInsured": 9,
+      "claims3y": 0,
+      "currentPremium": 2350
+    },
+    "cover": {
+      "tier": "todo_riesgo",
+      "extras": [
+        "retirada_carnet"
+      ]
+    },
+    "policy": {
+      "startDate": "2026-12-01"
+    },
+    "fleet": {
+      "size": 1
+    },
+    "allianzSentAt": "2026-11-19T09:30:00Z"
+  },
+  {
+    "_note": "Cabeza tractora internacional con mercancías peligrosas y un siniestro: muestra rechazos por apetito de riesgo.",
+    "id": "L1003",
+    "quoteRef": "CA2611201003",
+    "receivedAt": "2026-11-20T07:40:00Z",
+    "source": "web-form",
+    "formStep": 3,
+    "status": "datos_completos",
+    "demo": true,
+    "contact": {
+      "name": "Transportes Demo Norte SL (DEMO)",
+      "phone": "600 000 003",
+      "email": "demo1003@example.com",
+      "taxIdType": "CIF",
+      "taxId": "B00000000",
+      "holderType": "empresa",
+      "postalCode": "48950",
+      "province": "Bizkaia"
+    },
+    "vehicle": {
+      "kind": "tractora",
+      "plate": "5678 LBC",
+      "make": "Volvo",
+      "model": "FH 500",
+      "makeModel": "Volvo FH 500",
+      "year": 2021,
+      "mmaKg": 40000,
+      "valueNew": 135000,
+      "attachedEquipment": "no"
+    },
+    "use": {
+      "service": "publico",
+      "scope": "internacional",
+      "cargo": "adr"
+    },
+    "driver": {
+      "age": 38,
+      "licenseYears": 12
+    },
+    "history": {
+      "currentInsurer": "Allianz",
+      "yearsInsured": 6,
+      "claims3y": 1,
+      "currentPremium": 4100
+    },
+    "cover": {
+      "tier": "ampliado",
+      "extras": [
+        "paralizacion"
+      ]
+    },
+    "policy": {
+      "startDate": "2027-01-15"
+    },
+    "fleet": {
+      "size": 4
+    },
+    "allianzSentAt": "2026-11-20T08:02:00Z"
+  }
+]

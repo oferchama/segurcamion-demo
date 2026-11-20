@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Cotizador camiones · prototipo</title>
+<style>
+  :root { --navy:#142381; --navy-2:#0c1660; --orange:#fd9800; --ink:#1d2333; --mute:#6b7280; --line:#e3e6ef;
+          --soft:#f4f5fa; --bg:#eef0f6; --ok:#0f8a4b; --bad:#c0392b; --warn:#b26a00; }
+  * { box-sizing: border-box; }
+  body { margin:0; font: 14px/1.45 "Segoe UI", system-ui, -apple-system, Arial, sans-serif; color: var(--ink); background: var(--bg); }
+  header { background: var(--navy); color:#fff; padding: 10px 20px; display:flex; align-items:center; gap: 14px; border-bottom: 4px solid var(--orange); flex-wrap: wrap; }
+  header .logo { font-weight: 800; font-size: 20px; letter-spacing: -.3px; }
+  header .logo b { color: var(--orange); }
+  header .sub { opacity: .75; font-size: 13px; }
+  header .right { margin-left:auto; display:flex; gap:10px; align-items:center; font-size: 13px; flex-wrap: wrap; }
+  header input { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25); color:#fff; border-radius: 6px; padding: 4px 8px; width: 100px; }
+  header button.ghost { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.35); }
+  .demo-strip { background: #fff4e0; color: #7a4a00; font-size: 12.5px; padding: 6px 20px; border-bottom: 1px solid #f5d9a8; }
+  .layout { display:grid; grid-template-columns: 300px 1fr; height: calc(100vh - 92px); }
+  aside { background:#fff; border-right: 1px solid var(--line); overflow:auto; }
+  aside h3 { margin: 0; padding: 14px 16px 8px; font-size: 12px; text-transform: uppercase; letter-spacing: .8px; color: var(--mute); display:flex; justify-content:space-between; }
+  .filters { padding: 0 16px 10px; border-bottom: 1px solid var(--line); display: grid; gap: 6px; position: sticky; top: 0; background: #fff; z-index: 1; }
+  .filters input, .filters select { width: 100%; min-width: 0; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; font: inherit; font-size: 13px; background: #fff; }
+  .filters input:focus, .filters select:focus { outline: 2px solid #fdd08a; border-color: var(--orange); }
+  .filter-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  button.link { background: none; padding: 0; color: var(--navy); font-size: 12.5px; font-weight: 600; justify-self: start; text-decoration: underline; }
+  .lead-item { padding: 12px 16px; border-bottom: 1px solid var(--line); cursor: pointer; }
+  .lead-item:hover { background: var(--soft); }
+  .lead-item.active { background: #fff4e0; box-shadow: inset 4px 0 0 var(--orange); }
+  .lead-item.new { animation: flash 1.6s ease-out; }
+  @keyframes flash { from { background: #ffe2ad; } to { background: transparent; } }
+  .lead-item .t { font-weight: 600; display:flex; justify-content:space-between; gap: 8px; }
+  .lead-item .s { color: var(--mute); font-size: 12px; }
+  .bar { height: 5px; background: var(--line); border-radius: 3px; margin-top: 6px; overflow:hidden; }
+  .bar i { display:block; height:100%; background: var(--orange); }
+  .bar i.full { background: var(--ok); }
+  main { overflow:auto; padding: 20px 24px 60px; }
+  .card { background:#fff; border-radius: 10px; border: 1px solid var(--line); padding: 16px 18px; margin-bottom: 16px; }
+  .card h2 { margin: 0 0 12px; font-size: 15px; color: var(--navy); display:flex; align-items:center; gap: 10px; flex-wrap: wrap; }
+  .card h2 .step { background: var(--navy); color:#fff; width: 22px; height: 22px; border-radius: 50%; display:inline-flex; align-items:center; justify-content:center; font-size: 12px; }
+  .card h2 .right { margin-left:auto; font-weight: 400; font-size: 13px; color: var(--mute); }
+  .title { display:flex; align-items: baseline; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+  .title h1 { margin:0; font-size: 22px; color: var(--navy); }
+  .journey { display:flex; gap: 6px; margin: 0 0 14px; flex-wrap: wrap; }
+  .journey span { font-size: 12px; padding: 3px 10px; border-radius: 999px; background: #fff; border: 1px solid var(--line); color: var(--mute); }
+  .journey span.done { background: #e3f5ec; border-color: #bfe6cf; color: var(--ok); }
+  .chip { display:inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; background: var(--soft); color: var(--mute); text-transform: uppercase; letter-spacing: .4px; }
+  .chip.ok { background:#e3f5ec; color: var(--ok); } .chip.bad { background:#fde8e8; color: var(--bad); }
+  .chip.warn { background:#fff1dc; color: var(--warn); } .chip.blue { background:#e6e9fb; color: var(--navy); }
+  .groups { display:grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 14px 22px; }
+  .group h4 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .7px; color: var(--mute); }
+  .f { display:grid; grid-template-columns: 1fr 1.1fr; align-items:center; gap: 8px; margin: 4px 0; }
+  .f label { font-size: 13px; }
+  .f input, .f select { width:100%; padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px; font: inherit; background:#fff; min-width: 0; }
+  .f.missing label::after { content: " • falta"; color: var(--orange); font-weight: 700; font-size: 11px; }
+  .f.missing input, .f.missing select { border-color: var(--orange); background: #fffaf2; }
+  .actions { display:flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; align-items:center; }
+  button { font: inherit; border: 0; border-radius: 7px; padding: 8px 14px; cursor:pointer; background: var(--soft); color: var(--ink); font-weight: 600; }
+  button.primary { background: var(--orange); color:#fff; }
+  button.navy { background: var(--navy); color:#fff; }
+  button.wa { background: #25D366; color:#fff; }
+  button.demo { background: #fff; color: var(--warn); border: 1px dashed var(--orange); }
+  button:disabled { opacity: .5; cursor: default; }
+  .hint { color: var(--mute); font-size: 12.5px; }
+  .table-wrap { overflow-x: auto; }
+  table { width:100%; border-collapse: collapse; }
+  th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align:left; vertical-align: middle; }
+  th { font-size: 11.5px; text-transform: uppercase; letter-spacing: .6px; color: var(--mute); font-weight: 600; white-space: nowrap; }
+  th.wanted { color: var(--navy); }
+  td.num, th.num { text-align:right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.best { font-weight: 800; color: var(--ok); }
+  .dot { display:inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
+  .reason { color: var(--mute); font-size: 12.5px; }
+  .manual { display:flex; gap: 6px; align-items:center; flex-wrap: wrap; }
+  .manual input, .manual select { padding: 4px 6px; border: 1px solid var(--line); border-radius: 6px; width: 90px; font: inherit; }
+  .manual select { width: 110px; }
+  .offer-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px 20px; }
+  .offer-grid label { display:block; font-size: 12px; color: var(--mute); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .5px; }
+  .offer-grid select, .offer-grid input, textarea { width: 100%; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; font: inherit; }
+  textarea { min-height: 64px; resize: vertical; }
+  .checks { display:flex; flex-wrap: wrap; gap: 6px 14px; }
+  .checks label { text-transform:none; letter-spacing: 0; color: var(--ink); font-size: 13px; display:flex; gap: 5px; align-items:center; }
+  .result { display:grid; grid-template-columns: minmax(0, 1fr); gap: 16px; margin-top: 16px; }
+  @media (min-width: 1250px) { .result { grid-template-columns: minmax(0, 1fr) 340px; } }
+  iframe { width:100%; height: 720px; border: 1px solid var(--line); border-radius: 8px; background:#fff; }
+  pre.msg { white-space: pre-wrap; background: #e7fbe9; border-radius: 10px; padding: 12px 14px; margin: 0; font: 13.5px/1.45 "Segoe UI", system-ui, sans-serif; }
+  .empty { color: var(--mute); text-align:center; padding: 80px 20px; }
+  dialog { border: 0; border-radius: 12px; padding: 20px; width: min(640px, 92vw); box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+  dialog::backdrop { background: rgba(12, 22, 96, .35); }
+  .demo { background: #fde8e8; color: #9b1c1c; padding: 6px 10px; border-radius: 6px; font-size: 12.5px; margin-bottom: 10px; }
+  .toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--navy); color: #fff; padding: 10px 16px; border-radius: 8px; font-size: 13.5px; box-shadow: 0 8px 30px rgba(0,0,0,.2); opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 92vw; }
+  .toast.on { opacity: 1; }
+  .az-tag { font-size: 10px; font-weight: 600; color: #003781; background: #e6ecf7; padding: 1px 5px; border-radius: 4px; }
+  .card.allianz { border-left: 4px solid #003781; }
+  table.az th, table.az td { text-align: right; }
+  .tour { width: min(560px, 94vw); padding: 26px 28px 20px; }
+  .tour h2 { margin: 2px 0 10px; font-size: 20px; color: var(--navy); }
+  .tour p, .tour li, .tour dd { font-size: 14px; }
+  .tour ul, .tour ol { padding-left: 20px; margin: 8px 0; }
+  .tour li { margin: 6px 0; }
+  .tour .kicker { margin: 0; font-size: 11.5px; letter-spacing: .8px; text-transform: uppercase; color: var(--orange); font-weight: 700; }
+  .tour ol.flow { counter-reset: s; list-style: none; padding: 0; }
+  .tour ol.flow li { counter-increment: s; position: relative; padding: 8px 10px 8px 42px; background: var(--soft); border-radius: 8px; }
+  .tour ol.flow li::before { content: counter(s); position: absolute; left: 10px; top: 8px; width: 22px; height: 22px; border-radius: 50%; background: var(--orange); color: #fff; font-weight: 700; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+  .tour dl.buttons { display: grid; grid-template-columns: max-content 1fr; gap: 7px 12px; align-items: center; margin: 10px 0; }
+  .tour dt, .tour dd { margin: 0; }
+  .tour .b { display: inline-block; font-size: 12px; font-weight: 600; padding: 4px 9px; border-radius: 6px; background: var(--soft); white-space: nowrap; }
+  .tour .b.primary { background: var(--orange); color: #fff; } .tour .b.wa { background: #25D366; color: #fff; }
+  .tour .b.navy { background: var(--navy); color: #fff; } .tour .b.demo { background: #fff; color: var(--warn); border: 1px dashed var(--orange); }
+  .tour .b.ghost-dark { background: var(--navy-2); color: #fff; }
+  .tour .miss-demo { color: var(--orange); font-weight: 700; }
+  .tour-progress { display: flex; gap: 6px; margin-bottom: 14px; }
+  .tour-progress i { flex: 1; height: 4px; border-radius: 2px; background: var(--line); }
+  .tour-progress i.on { background: var(--orange); }
+  .tour-nav { margin-top: 18px; }
+  @media (max-width: 560px) { .tour dl.buttons { grid-template-columns: 1fr; } .tour dd { margin-bottom: 6px; } }
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; height:auto; } aside { max-height: 260px; } .result { grid-template-columns: 1fr; }
+    main { padding: 16px; } iframe { height: 520px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Segur<b>Camión</b></div>
+  <div class="sub">Cotizador multi-aseguradora · prototipo</div>
+  <div class="right">
+    <button class="ghost" onclick="openTour(0)">¿Cómo funciona?</button>
+    <button class="primary" onclick="simulateLead()">＋ Simular nuevo lead</button>
+    <span>Asesor <input id="agentName" value="Marta"></span>
+    <button class="ghost" onclick="resetDemo()" title="Vuelve a los leads de ejemplo">Reiniciar demo</button>
+  </div>
+</header>
+<div class="demo-strip" id="demoStrip">Prototipo de demostración para SegurCamión. No es un servicio real: todos los clientes son ficticios y los precios están simulados. No se envía nada a ninguna aseguradora.</div>
+<div class="layout">
+  <aside>
+    <h3><span>Leads</span><span id="leadCount"></span></h3>
+    <div class="filters">
+      <input id="q" type="search" placeholder="Buscar nombre, matrícula, teléfono…" title="Nombre, matrícula, teléfono, email, NIF, provincia o Nº de tarificación" oninput="renderList()" aria-label="Buscar leads">
+      <div class="filter-row">
+        <select id="fStatus" onchange="renderList()" aria-label="Filtrar por estado"></select>
+        <select id="fData" onchange="renderList()" aria-label="Filtrar por datos">
+          <option value="">Datos: todos</option>
+          <option value="missing">Faltan datos</option>
+          <option value="complete">Datos completos</option>
+        </select>
+      </div>
+      <button id="clearFilters" class="link" onclick="clearFilters()" hidden>Quitar filtros</button>
+    </div>
+    <div id="leadList"></div>
+  </aside>
+  <main id="main"><div class="empty">Cargando…</div></main>
+</div>
+
+<dialog id="dlg"><div id="dlgBody"></div><div class="actions" style="justify-content:flex-end"><button onclick="dlg.close()">Cerrar</button></div></dialog>
+<div class="toast" id="toast"></div>
+
+<dialog id="tour" class="tour">
+  <div class="tour-progress" id="tourDots"></div>
+  <div id="tourBody"></div>
+  <div class="actions tour-nav">
+    <button onclick="closeTour()">Saltar</button>
+    <span style="flex:1"></span>
+    <button id="tourPrev" onclick="tourStep(-1)">Atrás</button>
+    <button id="tourNext" class="primary" onclick="tourStep(1)">Siguiente</button>
+  </div>
+</dialog>
+
+<template id="tourSlides">
+  <section>
+    <p class="kicker">Bienvenido</p>
+    <h2>Esto es el backend del asesor</h2>
+    <p>Es la herramienta interna donde el equipo recibe las solicitudes de la web, compara aseguradoras y envía la oferta por WhatsApp.</p>
+    <ul>
+      <li><b>El formulario de la web se queda como está hoy.</b> No se añade ningún campo obligatorio.</li>
+      <li><b>Todo es modificable:</b> campos, aseguradoras, textos de WhatsApp, diseño del PDF.</li>
+      <li><b>Lo principal que habría que construir es la conexión con los portales de las aseguradoras.</b> En esta demo todos los precios son simulados.</li>
+    </ul>
+  </section>
+  <section>
+    <p class="kicker">El proceso</p>
+    <h2>Cinco pasos por lead</h2>
+    <ol class="flow">
+      <li><b>Llega un lead</b> desde la web, ya con su precio Allianz.</li>
+      <li><b>El asesor envía la oferta Allianz</b> por WhatsApp y pide los datos que faltan.</li>
+      <li><b>El cliente responde</b> y se completan sus datos.</li>
+      <li><b>Cotizar todas:</b> se consultan a la vez todas las aseguradoras con las que trabajéis.</li>
+      <li><b>Se envía la oferta completa:</b> PDF comparativo + mensaje de WhatsApp.</li>
+    </ol>
+  </section>
+  <section>
+    <p class="kicker">Leads y ficha del cliente</p>
+    <h2>Qué ves en pantalla</h2>
+    <ul>
+      <li><b>Leads (izquierda):</b> cada solicitud de la web, con el precio Allianz o el de la mejor oferta. La barra indica cuántos datos tenemos de los que piden las aseguradoras. Arriba, buscador (nombre, matrícula, teléfono…) y filtros por estado y por datos.</li>
+      <li><b>Ficha del cliente:</b> los datos agrupados. <span class="miss-demo">En naranja</span>, lo que falta para cotizar en todas.</li>
+    </ul>
+  </section>
+  <section>
+    <p class="kicker">Botones</p>
+    <h2>Qué hace cada uno</h2>
+    <dl class="buttons">
+      <dt><span class="b primary">＋ Simular nuevo lead</span></dt><dd>Crea una solicitud ficticia, como si llegara del formulario.</dd>
+      <dt><span class="b wa">Enviar oferta Allianz…</span></dt><dd>Prepara el WhatsApp con el precio Allianz y las preguntas que faltan.</dd>
+      <dt><span class="b demo">Simular respuesta del cliente</span></dt><dd>Rellena los datos como si el cliente hubiera contestado.</dd>
+      <dt><span class="b navy">Guardar datos</span></dt><dd>Guarda lo que el asesor edite a mano.</dd>
+      <dt><span class="b primary">Cotizar todas</span></dt><dd>Pide precio a todas las aseguradoras del panel. Las que no tienen API admiten precio manual.</dd>
+      <dt><span class="b primary">Generar propuesta PDF y mensaje</span></dt><dd>Crea el PDF comparativo y el WhatsApp final.</dd>
+      <dt><span class="b ghost-dark">Reiniciar demo</span></dt><dd>Vuelve a los leads de ejemplo.</dd>
+    </dl>
+    <p class="hint">Puedes volver a ver esta guía con <b>¿Cómo funciona?</b></p>
+  </section>
+</template>
+
+<script type="module">
+import { localApi, init as initLocal } from './localApi.js';
+
+const $ = s => document.querySelector(s);
+const eur = n => n == null ? '—' : new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+let MODE = 'server';
+let META, current, run;
+
+async function serverApi(path, opts = {}) {
+  const r = await fetch(path, { method: opts.method ?? 'GET', headers: { 'content-type': 'application/json' }, body: opts.body && JSON.stringify(opts.body) });
+  const j = await r.json(); if (!r.ok) throw new Error(j.error || r.statusText); return j;
+}
+const api = (path, opts) => MODE === 'local' ? localApi(path, opts) : serverApi(path, opts);
+
+const GROUPS = {
+  'Tomador': ['contact.name', 'contact.surname', 'contact.phone', 'contact.email', 'contact.taxIdType', 'contact.taxId', 'contact.holderType', 'contact.postalCode'],
+  'Vehículo': ['vehicle.kind', 'vehicle.plate', 'vehicle.make', 'vehicle.model', 'vehicle.year', 'vehicle.mmaKg', 'vehicle.valueNew', 'vehicle.attachedEquipment'],
+  'Uso y póliza': ['use.service', 'use.scope', 'use.cargo', 'policy.startDate', 'cover.tier', 'fleet.size'],
+  'Conductor e historial': ['driver.age', 'driver.licenseYears', 'history.claims3y', 'history.yearsInsured', 'history.currentInsurer', 'history.policyNumber', 'history.currentPremium'],
+};
+const OPTION_LABEL = { rc: 'Terceros', rc_lunas: 'Terceros + lunas + asistencia', ampliado: '+ robo + incendio', todo_riesgo: 'Todo riesgo c/franquicia', todo_riesgo_sf: 'Todo riesgo s/franquicia',
+  si: 'Sí', no: 'No', publico: 'Público', privado: 'Propio / particular', fronterizo: 'Fronterizo (ES/FR/PT)', rigido: 'Rígido', tractora: 'Cabeza tractora', autonomo: 'Autónomo / particular', empresa: 'Empresa', adr: 'Peligrosas (ADR)' };
+const STATUS = { nuevo: ['Nuevo', 'warn'], allianz_enviada: ['Oferta Allianz enviada', 'blue'], datos_completos: ['Datos completos', 'blue'], cotizado: ['Cotizado', 'blue'], propuesta_lista: ['Propuesta lista', 'ok'] };
+const RSTATUS = { quoted: ['Cotizado', 'ok'], needs_data: ['Faltan datos', 'warn'], declined: ['Rechaza', 'bad'], manual_task: ['Tarea manual', 'blue'], error: ['Error', 'bad'], no_offer: ['Sin oferta', 'bad'] };
+const CHANNEL = { api: 'API', portal: 'Portal', email: 'Email' };
+const get = (o, p) => p.split('.').reduce((a, k) => a?.[k], o);
+
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('on'), 2600); }
+
+let ALL_LEADS = [];
+let lastHighlight;
+const fold = s => String(s ?? '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+
+async function loadList(highlight) {
+  ALL_LEADS = await api('/api/leads');
+  lastHighlight = highlight;
+  renderList();
+}
+
+/** Client-side search + filters over the lead list. */
+function renderList() {
+  const q = fold($('#q').value).trim();
+  const qDigits = q.replace(/\D/g, '');
+  const fStatus = $('#fStatus').value, fData = $('#fData').value;
+  const missingOf = l => l.completeness.total - l.completeness.have;
+
+  // Status filter options with live counts.
+  const counts = ALL_LEADS.reduce((m, l) => (m[l.status] = (m[l.status] ?? 0) + 1, m), {});
+  $('#fStatus').innerHTML = `<option value="">Estado: todos</option>` +
+    Object.entries(STATUS).map(([k, [label]]) => `<option value="${k}" ${k === fStatus ? 'selected' : ''} ${counts[k] ? '' : 'disabled'}>${label} (${counts[k] ?? 0})</option>`).join('');
+
+  const shown = ALL_LEADS.filter(l => {
+    if (fStatus && l.status !== fStatus) return false;
+    if (fData === 'missing' && !missingOf(l)) return false;
+    if (fData === 'complete' && missingOf(l)) return false;
+    if (!q) return true;
+    const hay = fold([l.name, l.email, l.vehicle, l.plate, l.id, l.quoteRef, l.province, l.postalCode, l.taxId].join(' '));
+    return q.split(/\s+/).every(w => hay.includes(w)) || (qDigits.length >= 3 && String(l.phone ?? '').replace(/\D/g, '').includes(qDigits));
+  });
+
+  $('#leadCount').textContent = shown.length === ALL_LEADS.length ? ALL_LEADS.length : `${shown.length} de ${ALL_LEADS.length}`;
+  $('#clearFilters').hidden = !(q || fStatus || fData);
+  $('#leadList').innerHTML = shown.length ? shown.map(l => {
+    const pct = Math.round(100 * l.completeness.have / l.completeness.total);
+    const [st] = STATUS[l.status] ?? [l.status];
+    return `<div class="lead-item ${current?.id === l.id ? 'active' : ''} ${lastHighlight === l.id ? 'new' : ''}" onclick="openLead('${esc(l.id)}')">
+      <div class="t"><span>${esc(l.name || l.email || l.id)}</span>${l.best ? `<span title="${l.bestFrom === 'Allianz' ? 'Precio Allianz (automático)' : 'Mejor opción de la comparativa'}">${l.bestFrom === 'Allianz' ? '<small class="az-tag">Allianz</small> ' : ''}${eur(l.best)}</span>` : ''}</div>
+      <div class="s">${esc(l.vehicle || '')}${l.plate ? ` · ${esc(l.plate)}` : ''}${l.mmaKg ? ` · ${l.mmaKg / 1000} t` : ''} · ${esc(st)}</div>
+      <div class="bar"><i class="${pct === 100 ? 'full' : ''}" style="width:${pct}%"></i></div></div>`;
+  }).join('') : '<p class="hint" style="padding: 14px 16px">Ningún lead coincide con la búsqueda.</p>';
+}
+
+function clearFilters() { $('#q').value = ''; $('#fStatus').value = ''; $('#fData').value = ''; renderList(); }
+
+async function openLead(id) {
+  const { lead, completeness } = await api(`/api/leads/${encodeURIComponent(id)}`);
+  current = lead; run = lead.lastRun;
+  render(completeness);
+  loadList();
+}
+
+function field(path, missingSet) {
+  const def = META.fields[path] ?? {};
+  const v = get(current, path) ?? '';
+  const isMissing = [...missingSet].some(m => m.split('|').includes(path));
+  const input = def.options
+    ? `<select name="${path}"><option value=""></option>${def.options.map(o => `<option value="${esc(o)}" ${o == v ? 'selected' : ''}>${esc(OPTION_LABEL[o] ?? o)}</option>`).join('')}</select>`
+    : `<input name="${path}" value="${esc(v)}" ${path.includes('Date') ? 'type="date"' : ''}>`;
+  return `<div class="f ${isMissing ? 'missing' : ''}"><label>${esc(def.label ?? path)}</label>${input}</div>`;
+}
+
+function render(comp) {
+  const missingSet = new Set(comp.missing.map(m => m.path));
+  const [st, cls] = STATUS[current.status] ?? [current.status, ''];
+  const step = current.formStep ?? 1;
+  const name = [current.contact?.name, current.contact?.surname].filter(Boolean).join(' ');
+  const quickInsurers = META.insurers.filter(i => !comp.missing.some(m => m.neededBy.includes(i.name))).map(i => i.name);
+  $('#main').innerHTML = `
+    <div class="title"><h1>${esc(name || current.contact?.email || current.id)}</h1>
+      <span class="chip ${cls}">${esc(st)}</span>
+      <span class="hint">${esc(current.id)}${current.quoteRef ? ` · Nº tarificación ${esc(current.quoteRef)}` : ''} · ${new Date(current.receivedAt).toLocaleString('es-ES')}</span></div>
+    <div class="journey">
+      <span class="${step >= 1 ? 'done' : ''}">1 · Datos básicos</span>
+      <span class="${step >= 2 || current.cover?.tier ? 'done' : ''}">2 · Coberturas${current.cover?.tier ? `: ${esc(OPTION_LABEL[current.cover.tier])}` : ''}</span>
+      <span class="${step >= 3 ? 'done' : ''}">3 · Descuento</span>
+      <span class="${comp.missing.length ? '' : 'done'}">4 · Datos extra (WhatsApp)</span>
+    </div>
+    ${current._note ? `<p class="hint" style="margin-top:-6px">${esc(current._note)}</p>` : ''}
+
+    ${allianzCard(comp)}
+
+    <div class="card">
+      <h2><span class="step">2</span> Datos del cliente <span class="right">${comp.have}/${comp.total} datos que piden las aseguradoras</span></h2>
+      <form id="leadForm" class="groups" onsubmit="return false">
+        ${Object.entries(GROUPS).map(([g, paths]) => `<div class="group"><h4>${g}</h4>${paths.map(p => field(p, missingSet)).join('')}</div>`).join('')}
+      </form>
+      <div class="actions">
+        <button class="navy" onclick="saveLead(true)">Guardar datos</button>
+        ${comp.missing.length ? `<button class="demo" onclick="simulateReply()">Simular respuesta del cliente</button>
+          <span class="hint">Faltan ${comp.missing.length}. Con los datos actuales cotizan: ${esc(quickInsurers.join(', ') || 'ninguna')}</span>`
+        : '<span class="chip ok">Listo para cotizar en todas</span>'}
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="step">3</span> Cotizar todas</h2>
+      <div class="actions" style="margin-top:0"><button class="primary" id="quoteBtn" onclick="doQuote()">${run ? 'Volver a cotizar' : 'Cotizar todas'}</button>
+        ${run ? `<span class="hint">Última cotización ${new Date(run.runAt).toLocaleString('es-ES')}</span>` : '<span class="hint">Las que aún no tienen datos suficientes lo indican, y puedes cotizar igualmente.</span>'}</div>
+      <div id="results">${run ? resultsTable() : ''}</div>
+    </div>
+
+    <div class="card" id="offerCard" ${run ? '' : 'style="display:none"'}>
+      <h2><span class="step">4</span> Propuesta completa al cliente</h2>
+      <div id="offer">${run ? offerForm() : ''}</div>
+      <div id="offerOut"></div>
+    </div>`;
+}
+
+function allianzCard(comp) {
+  const quotes = current.allianzRun?.results?.find(r => r.insurerId === 'allianz')?.quotes ?? [];
+  const tiers = Object.keys(META.tiers);
+  const chosen = current.cover?.tier;
+  const sent = current.allianzSentAt ? new Date(current.allianzSentAt).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : null;
+  const price = t => quotes.find(q => q.tier === t)?.annualPremium;
+  return `<div class="card allianz">
+    <h2><span class="step">1</span> Oferta Allianz <span class="chip ok">automática</span>
+      ${sent ? `<span class="chip blue">Enviada ${esc(sent)}</span>` : ''}</h2>
+    ${quotes.length ? `<div class="table-wrap"><table class="az"><thead><tr>${tiers.map(t => `<th class="num ${t === chosen ? 'wanted' : ''}">${esc(META.tiers[t].short)}${t === chosen ? ' ★' : ''}</th>`).join('')}</tr></thead>
+      <tbody><tr>${tiers.map(t => `<td class="num ${t === chosen ? 'best' : ''}">${eur(price(t))}</td>`).join('')}</tr></tbody></table></div>
+      <p class="hint" style="margin:6px 0 0">${chosen ? '★ Modalidad elegida por el cliente en la web.' : 'El cliente no llegó a elegir modalidad: se le envían las tres principales.'} Precio simulado en esta demo.</p>`
+      : '<p class="hint">Allianz no ha devuelto precio para este lead.</p>'}
+    <div class="actions">
+      <button class="wa" onclick="sendAllianz()" ${quotes.length ? '' : 'disabled'}>${sent ? 'Reenviar' : 'Enviar'} oferta Allianz por WhatsApp${comp.missing.length ? ` y pedir ${comp.missing.length} datos` : ''}</button>
+      ${current.contact?.phone ? '' : '<span class="hint">Sin teléfono (el cliente salió en el paso 1): se envía por email.</span>'}
+    </div>
+  </div>`;
+}
+
+async function sendAllianz() {
+  await saveLead();
+  const m = await api(`/api/leads/${current.id}/allianz-message?agent=${encodeURIComponent($('#agentName').value)}`);
+  if (m.error) return alert(m.error);
+  showDialog(`<h3 style="margin-top:0">Oferta Allianz${m.missing ? ` + petición de ${m.missing} datos` : ''}</h3><pre class="msg">${esc(m.text)}</pre>
+    <div class="actions">
+      ${m.emailLink ? `<a href="${esc(m.emailLink)}" onclick="allianzSent()"><button class="navy">Enviar por email</button></a>` : ''}
+      <a href="${esc(m.link)}" target="_blank" rel="noopener" onclick="allianzSent()"><button class="wa">Abrir en WhatsApp</button></a>
+      <button onclick="copyText(this); allianzSent()" data-text="${esc(m.text)}">Copiar</button></div>
+    ${current.demo ? '<p class="hint">Lead de demostración: el enlace abre WhatsApp sin destinatario.</p>' : ''}`);
+}
+
+async function allianzSent() {
+  await api(`/api/leads/${current.id}/allianz-sent`, { method: 'POST' });
+  setTimeout(() => { dlg.close(); openLead(current.id); toast('Oferta Allianz marcada como enviada'); }, 400);
+}
+
+function resultsTable() {
+  const tiers = Object.keys(META.tiers);
+  const best = Object.fromEntries(tiers.map(t => [t, run.ranking.byTier[t]?.min]));
+  const anySim = run.results.some(r => r.mode === 'simulated' && r.status === 'quoted');
+  return `${anySim ? '<div class="demo" style="margin-top:12px">Precios "simulado": salen de un modelo de pricing de demostración, no de la aseguradora.</div>' : ''}
+  <div class="table-wrap"><table><thead><tr><th>Aseguradora</th><th>Canal</th><th>Estado</th>${tiers.map(t => `<th class="num ${t === current.cover?.tier ? 'wanted' : ''}" title="${esc(META.tiers[t].label)}">${esc(META.tiers[t].short)}${t === current.cover?.tier ? ' ★' : ''}</th>`).join('')}<th></th></tr></thead><tbody>
+  ${run.results.map(r => {
+    const ins = META.insurers.find(i => i.id === r.insurerId);
+    const [st, cls] = RSTATUS[r.status] ?? [r.status, ''];
+    const price = t => r.quotes.find(q => q.tier === t)?.annualPremium;
+    let extra = '';
+    if (r.status === 'declined') extra = `<span class="reason">${esc(r.reason)}</span>`;
+    if (r.status === 'needs_data') extra = `<span class="reason">Falta: ${r.missing.map(m => m.split('|').map(x => META.fields[x]?.label ?? x).join(' o ')).join(', ')}</span>`;
+    if (r.status === 'error') extra = `<span class="reason">${esc(r.error)}</span>`;
+    if (r.status === 'manual_task' || r.mode === 'manual') extra = `<div class="manual">
+        <select id="mt-${r.insurerId}">${tiers.map(t => `<option value="${t}" ${t === current.cover?.tier ? 'selected' : ''}>${META.tiers[t].short}</option>`).join('')}</select>
+        <input id="mp-${r.insurerId}" placeholder="Prima €" inputmode="numeric"><input id="mf-${r.insurerId}" placeholder="Franq. €" inputmode="numeric">
+        <button onclick="addManual('${r.insurerId}')">Añadir</button>
+        ${r.task ? `<button onclick="showTask('${r.insurerId}')">Ver solicitud</button>` : ''}</div>`;
+    return `<tr><td style="white-space:nowrap"><span class="dot" style="background:${ins.color}"></span><b>${esc(r.insurer)}</b></td>
+      <td style="white-space:nowrap"><span class="chip">${CHANNEL[r.channel]}</span> <span class="chip ${r.mode === 'live' ? 'ok' : r.mode === 'manual' ? 'blue' : 'warn'}">${r.mode === 'simulated' ? 'simulado' : r.mode}</span></td>
+      <td><span class="chip ${cls}">${st}</span></td>
+      ${tiers.map(t => `<td class="num ${price(t) && price(t) === best[t] ? 'best' : ''}">${eur(price(t))}</td>`).join('')}
+      <td>${extra}</td></tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+
+function offerForm() {
+  const tiers = Object.keys(META.tiers).filter(t => run.ranking.byTier[t]);
+  const tier = current.offer?.tier && run.ranking.byTier[current.offer.tier] ? current.offer.tier : run.ranking.headlineTier;
+  const block = run.ranking.byTier[tier];
+  if (!block) return '<p class="hint">Aún no hay ofertas.</p>';
+  const ids = [...new Set(Object.values(run.ranking.byTier).flatMap(b => b.offers.map(o => o.insurerId)))];
+  const excluded = new Set(current.offer?.exclude ?? []);
+  return `<div class="offer-grid">
+    <div><label>Modalidad a destacar</label><select id="oTier" onchange="changeTier(this.value)">
+      ${tiers.map(t => `<option value="${t}" ${t === tier ? 'selected' : ''}>${esc(META.tiers[t].label)} (desde ${eur(run.ranking.byTier[t].min)})${t === current.cover?.tier ? ' ★ elegida en la web' : ''}</option>`).join('')}</select></div>
+    <div><label>Recomendar</label><select id="oRec">${block.offers.map(o => `<option value="${o.insurerId}" ${o.insurerId === (current.offer?.recommendedId ?? block.recommended.insurerId) ? 'selected' : ''}>${esc(o.insurer)} · ${eur(o.annualPremium)}${o.insurerId === block.recommended.insurerId ? ' (sugerida)' : ''}</option>`).join('')}</select></div>
+    <div style="grid-column: 1 / -1"><label>Mostrar al cliente</label><div class="checks">
+      ${ids.map(id => `<label><input type="checkbox" class="oInc" value="${id}" ${excluded.has(id) ? '' : 'checked'}> ${esc(META.insurers.find(i => i.id === id).name)}</label>`).join('')}</div></div>
+    <div style="grid-column: 1 / -1"><label>Nota personal del asesor (opcional, sale en el PDF)</label><textarea id="oNote" placeholder="Ej.: Con MGS mantienes la retirada de carnet y bajas la franquicia.">${esc(current.offer?.note ?? '')}</textarea></div>
+  </div>
+  <div class="actions"><button class="primary" onclick="makeOffer()">Generar propuesta PDF y mensaje</button></div>`;
+}
+
+function changeTier(t) { current.offer = { ...(current.offer || {}), tier: t, recommendedId: undefined }; $('#offer').innerHTML = offerForm(); }
+
+async function saveLead(notify) {
+  const body = Object.fromEntries(new FormData($('#leadForm')).entries());
+  const { lead, completeness } = await api(`/api/leads/${current.id}`, { method: 'PATCH', body });
+  current = lead; run = lead.lastRun; render(completeness); loadList();
+  if (notify) toast('Datos guardados');
+}
+
+async function askMissing() {
+  await saveLead();
+  const m = await api(`/api/leads/${current.id}/missing-message?agent=${encodeURIComponent($('#agentName').value)}`);
+  showDialog(`<h3 style="margin-top:0">Mensaje para pedir los datos que faltan</h3><pre class="msg">${esc(m.text)}</pre>
+    <div class="actions"><a href="${esc(m.link)}" target="_blank" rel="noopener"><button class="wa">Abrir en WhatsApp</button></a>
+    <button onclick="copyText(this)" data-text="${esc(m.text)}">Copiar</button></div>
+    ${current.demo ? '<p class="hint">Lead de demostración: el enlace abre WhatsApp sin destinatario.</p>' : ''}`);
+}
+
+async function simulateReply() {
+  await saveLead();
+  const { lead, completeness } = await api(`/api/leads/${current.id}/simulate-reply`, { method: 'POST' });
+  current = lead; run = lead.lastRun; render(completeness); loadList();
+  toast('El cliente ha respondido por WhatsApp con los datos que faltaban');
+}
+
+async function simulateLead() {
+  const { lead } = await api('/api/simulate', { method: 'POST' });
+  await openLead(lead.id);
+  await loadList(lead.id);
+  toast(lead.formStep >= 3 ? 'Nuevo lead: ha completado los 3 pasos de la web' : 'Nuevo lead: solo ha rellenado el paso 1 de la web');
+}
+
+async function resetDemo() {
+  if (!confirm('¿Volver a los leads de ejemplo? Se perderán los leads simulados.')) return;
+  await api('/api/reset', { method: 'POST' });
+  current = null; await boot();
+}
+
+async function doQuote() {
+  await saveLead();
+  $('#quoteBtn').disabled = true; $('#quoteBtn').textContent = 'Cotizando…';
+  run = await api(`/api/leads/${current.id}/quote`, { method: 'POST', body: {} });
+  await openLead(current.id);
+  $('#results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function addManual(id) {
+  try {
+    await api(`/api/leads/${current.id}/manual-quote`, { method: 'POST', body: {
+      insurerId: id, tier: $(`#mt-${id}`).value, annualPremium: $(`#mp-${id}`).value, franquicia: $(`#mf-${id}`).value } });
+    await openLead(current.id);
+    toast('Precio manual añadido a la comparativa');
+  } catch (e) { alert(e.message); }
+}
+
+function showTask(id) {
+  const t = run.results.find(r => r.insurerId === id).task;
+  showDialog(`<h3 style="margin-top:0">Solicitud a ${esc(id)}</h3><p class="hint">${esc(t.integration)}</p>
+    <p><b>Asunto:</b> ${esc(t.subject)}</p><pre class="msg" style="background:var(--soft)">${esc(t.body)}</pre>
+    <div class="actions"><button onclick="copyText(this)" data-text="${esc(t.body)}">Copiar texto</button></div>`);
+}
+
+async function makeOffer() {
+  const all = [...document.querySelectorAll('.oInc')];
+  const body = { tier: $('#oTier').value, recommendedId: $('#oRec').value, note: $('#oNote').value || undefined,
+    agentName: $('#agentName').value, exclude: all.filter(c => !c.checked).map(c => c.value) };
+  try {
+    const r = await api(`/api/leads/${current.id}/offer`, { method: 'POST', body });
+    current.offer = body;
+    $('#offerOut').innerHTML = `<div class="result"><iframe id="pdfFrame" title="Propuesta"></iframe>
+      <div><h4 style="margin:0 0 8px">Mensaje WhatsApp</h4><pre class="msg">${esc(r.whatsapp.text)}</pre>
+      <div class="actions"><a href="${esc(r.whatsapp.link)}" target="_blank" rel="noopener"><button class="wa">Abrir en WhatsApp</button></a>
+      ${r.pdfUrl ? `<a href="${esc(r.pdfUrl)}" download><button class="navy">Descargar PDF</button></a>` : '<button class="navy" onclick="printOffer()">Descargar PDF</button>'}</div>
+      <p class="hint">${r.pdfUrl ? '' : 'En el diálogo de impresión elige "Guardar como PDF". '}WhatsApp Web no adjunta archivos desde un enlace: arrastra el PDF al chat. Con la API de WhatsApp Business se enviaría automáticamente.</p></div></div>`;
+    // Scale the A4 page (794 CSS px) to the panel on screen only; printing is unaffected.
+    const frame = $('#pdfFrame');
+    frame.onload = () => {
+      const fit = () => frame.contentDocument?.documentElement.style.setProperty('--z', Math.min(1, (frame.clientWidth - 18) / 794));
+      fit(); new ResizeObserver(fit).observe(frame);
+    };
+    frame.srcdoc = r.html.replace('</head>', '<style>@media screen { html { zoom: var(--z, 1); } }</style></head>');
+    loadList();
+    $('#offerOut').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (e) { alert(e.message); }
+}
+
+function printOffer() { $('#pdfFrame').contentWindow.print(); }
+function copyText(btn) { navigator.clipboard.writeText(btn.dataset.text).then(() => toast('Copiado')); }
+function showDialog(html) { $('#dlgBody').innerHTML = html; $('#dlg').showModal(); }
+
+// Onboarding: shown once per browser, reopened from "¿Cómo funciona?".
+const TOUR_KEY = 'segurcamion-tour-seen';
+const slides = [...$('#tourSlides').content.querySelectorAll('section')];
+let tourAt = 0;
+function renderTour() {
+  $('#tourBody').replaceChildren(slides[tourAt].cloneNode(true));
+  $('#tourDots').innerHTML = slides.map((_, i) => `<i class="${i <= tourAt ? 'on' : ''}"></i>`).join('');
+  $('#tourPrev').style.visibility = tourAt ? 'visible' : 'hidden';
+  $('#tourNext').textContent = tourAt === slides.length - 1 ? 'Empezar' : 'Siguiente';
+}
+function openTour(i = 0) { tourAt = i; renderTour(); if (!$('#tour').open) $('#tour').showModal(); }
+function closeTour() { $('#tour').close(); try { localStorage.setItem(TOUR_KEY, '1'); } catch {} }
+function tourStep(d) {
+  if (tourAt + d >= slides.length) return closeTour();
+  tourAt = Math.max(0, tourAt + d); renderTour();
+}
+$('#tour').addEventListener('cancel', () => { try { localStorage.setItem(TOUR_KEY, '1'); } catch {} });
+
+Object.assign(window, { openLead, saveLead, askMissing, simulateReply, simulateLead, resetDemo, doQuote, addManual, showTask, makeOffer, printOffer, copyText, changeTier, sendAllianz, allianzSent, openTour, closeTour, tourStep, renderList, clearFilters });
+
+async function boot() {
+  try {
+    const r = await fetch('api/meta');
+    if (!r.ok || !(r.headers.get('content-type') ?? '').includes('json')) throw new Error();
+    META = await r.json();
+  } catch {
+    MODE = 'local';
+    await initLocal();
+    META = await api('/api/meta');
+  }
+  await loadList();
+  const first = document.querySelector('.lead-item');
+  if (first) first.click(); else $('#main').innerHTML = '<div class="empty">Sin leads. Pulsa “Simular nuevo lead”.</div>';
+  let seen = false; try { seen = !!localStorage.getItem(TOUR_KEY); } catch {}
+  if (!seen) openTour(0);
+}
+boot();
+</script>
+</body>
+</html>
